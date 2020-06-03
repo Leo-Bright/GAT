@@ -15,7 +15,7 @@ dataset = 'sanfrancisco'
 # training params
 batch_size = 1
 nb_epochs = 1000
-patience = 100
+patience = 50
 lr = 0.005        # learning rate
 l2_coef = 0.0005  # weight decay
 hid_units = [8]   # numbers of hidden units per each attention head in each layer
@@ -87,6 +87,7 @@ with tf.Graph().as_default():
     msk_resh = tf.reshape(msk_in, [-1])
     loss = model.masked_softmax_cross_entropy(log_resh, lab_resh, msk_resh)
     accuracy = model.masked_accuracy(log_resh, lab_resh, msk_resh)
+    f1 = model.micro_f1(log_resh, lab_resh, msk_resh)
 
     train_op = model.training(loss, lr, l2_coef)
 
@@ -178,13 +179,14 @@ with tf.Graph().as_default():
         ts_step = 0
         ts_loss = 0.0
         ts_acc = 0.0
+        ts_f1 = 0.0
 
         while ts_step * batch_size < ts_size:
             if sparse:
                 bbias = biases
             else:
                 bbias = biases[ts_step*batch_size:(ts_step+1)*batch_size]
-            loss_value_ts, acc_ts = sess.run([loss, accuracy],
+            loss_value_ts, acc_ts, f1_ts = sess.run([loss, accuracy, f1],
                 feed_dict={
                     ftr_in: features[ts_step*batch_size:(ts_step+1)*batch_size],
                     bias_in: bbias,
@@ -194,8 +196,9 @@ with tf.Graph().as_default():
                     attn_drop: 0.0, ffd_drop: 0.0})
             ts_loss += loss_value_ts
             ts_acc += acc_ts
+            ts_f1 += f1_ts
             ts_step += 1
 
-        print('Test loss:', ts_loss/ts_step, '; Test accuracy:', ts_acc/ts_step)
+        print('Test loss:', ts_loss/ts_step, '; Test accuracy:', ts_acc/ts_step, '; F1 :', ts_f1/ts_step)
 
         sess.close()
