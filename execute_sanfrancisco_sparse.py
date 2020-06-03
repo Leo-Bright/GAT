@@ -14,7 +14,7 @@ dataset = 'sanfrancisco'
 
 # training params
 batch_size = 1
-nb_epochs = 1000
+nb_epochs = 200
 patience = 50
 lr = 0.005        # learning rate
 l2_coef = 0.0005  # weight decay
@@ -117,7 +117,7 @@ with tf.Graph().as_default():
                 else:
                     bbias = biases[tr_step*batch_size:(tr_step+1)*batch_size]
 
-                _, loss_value_tr, acc_tr = sess.run([train_op, loss, accuracy],
+                _, loss_value_tr, acc_tr, outs = sess.run([train_op, loss, accuracy, logits],
                     feed_dict={
                         ftr_in: features[tr_step*batch_size:(tr_step+1)*batch_size],
                         bias_in: bbias,
@@ -149,8 +149,8 @@ with tf.Graph().as_default():
                 val_acc_avg += acc_vl
                 vl_step += 1
 
-            print('Training: loss = %.5f, acc = %.5f | Val: loss = %.5f, acc = %.5f' %
-                    (train_loss_avg/tr_step, train_acc_avg/tr_step,
+            print('Training: epoch = %03d, loss = %.5f, acc = %.5f | Val: loss = %.5f, acc = %.5f' %
+                    (epoch, train_loss_avg/tr_step, train_acc_avg/tr_step,
                     val_loss_avg/vl_step, val_acc_avg/vl_step))
 
             if val_acc_avg/vl_step >= vacc_mx or val_loss_avg/vl_step <= vlss_mn:
