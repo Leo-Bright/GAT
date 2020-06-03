@@ -7,6 +7,7 @@ import argparse
 from models import GAT
 from models import SpGAT
 from utils import process
+import pickle as pkl
 
 checkpt_file = 'pre_trained/sanfrancisco/mod_sanfrancisco.ckpt'
 
@@ -15,11 +16,11 @@ dataset = 'sanfrancisco'
 # training params
 batch_size = 1
 nb_epochs = 200
-patience = 50
+patience = 5
 lr = 0.005        # learning rate
 l2_coef = 0.0005  # weight decay
-hid_units = [8]   # numbers of hidden units per each attention head in each layer
-n_heads = [8, 1]  # additional entry for the output layer
+hid_units = [4]   # numbers of hidden units per each attention head in each layer
+n_heads = [4, 1]  # additional entry for the output layer
 residual = False
 nonlinearity = tf.nn.elu
 # model = GAT
@@ -36,6 +37,25 @@ print('nb. attention heads: ' + str(n_heads))
 print('residual: ' + str(residual))
 print('nonlinearity: ' + str(nonlinearity))
 print('model: ' + str(model))
+
+
+def save_emb_to_file(emb_vector, idx2node_dict_pkl_path, emb_idx_pkl_path, emb_file_path):
+
+    with open(idx2node_dict_pkl_path, "rb") as f:
+        idx2node = pkl.load(f)
+
+    with open(emb_idx_pkl_path, "rb") as f:
+        emb_idx = pkl.load(f)
+
+    assert len(emb_idx) == len(emb_vector)
+
+    with open(emb_file_path, "w") as f:
+        for i in range(len(emb_idx)):
+            node_id = idx2node[emb_idx[i]]
+            emb = emb_vector[i]
+            emb_str = map(str, emb)
+            f.write(node_id + ' ' + ' '.join(emb_str) + '\n')
+
 
 sparse = True
 
@@ -82,6 +102,11 @@ with tf.Graph().as_default():
                                 bias_mat=bias_in,
                                 hid_units=hid_units, n_heads=n_heads,
                                 residual=residual, activation=nonlinearity)
+    h_1 = model.attn_h_1(ftr_in, nb_classes, nb_nodes, is_train,
+                             attn_drop, ffd_drop,
+                             bias_mat=bias_in,
+                             hid_units=hid_units, n_heads=n_heads,
+                             residual=residual, activation=nonlinearity)
     log_resh = tf.reshape(logits, [-1, nb_classes])
     lab_resh = tf.reshape(lbl_in, [-1, nb_classes])
     msk_resh = tf.reshape(msk_in, [-1])
@@ -117,7 +142,7 @@ with tf.Graph().as_default():
                 else:
                     bbias = biases[tr_step*batch_size:(tr_step+1)*batch_size]
 
-                _, loss_value_tr, acc_tr, outs = sess.run([train_op, loss, accuracy, logits],
+                _, loss_value_tr, acc_tr, outs, hidden_emb = sess.run([train_op, loss, accuracy, logits, h_1],
                     feed_dict={
                         ftr_in: features[tr_step*batch_size:(tr_step+1)*batch_size],
                         bias_in: bbias,
@@ -172,6 +197,14 @@ with tf.Graph().as_default():
             train_acc_avg = 0
             val_loss_avg = 0
             val_acc_avg = 0
+
+        # save gcn embeddings to file
+        last_layer_emb = hidden_emb[0]
+        gat_emb_file_path = 'sanfrancisco/embeddings/sf_gat_raw_feature_segment_16d.embedding'
+        gat_emb_idx_pkl_path = 'sanfrancisco/embeddings/sf_gat_raw_feature_segment_16d.embedding.idx.pkl'
+        idx_segment_dict_pkl_path = 'sanfrancisco/sf_idx_segment_dict.pkl'
+        save_emb_to_file(last_layer_emb, idx_segment_dict_pkl_path, gat_emb_idx_pkl_path, gat_emb_file_path)
+        print("Embeddings Saved to " + gat_emb_file_path + ' !')
 
         saver.restore(sess, checkpt_file)
 
