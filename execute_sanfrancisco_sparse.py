@@ -200,9 +200,9 @@ with tf.Graph().as_default():
 
         # save gcn embeddings to file
         last_layer_emb = hidden_emb[0]
-        gat_emb_file_path = 'sanfrancisco/label_is_avenue/sf_gcn_raw_feature_segment_16d_target_is_avenue.embedding'
-        gat_emb_idx_pkl_path = 'sanfrancisco/label_is_avenue/sf_gcn_raw_feature_segment_16d_target_is_avenue.embedding.idx.pkl'
-        idx_segment_dict_pkl_path = 'sanfrancisco/label_is_avenue/sf_idx_seg_dict.pkl'
+        gat_emb_file_path = 'sanfrancisco/label_is_steet/sf_gcn_raw_feature_segment_16d_target_is_street.embedding'
+        gat_emb_idx_pkl_path = 'sanfrancisco/label_is_steet/sf_gcn_raw_feature_segment_16d_target_is_street.embedding.idx.pkl'
+        idx_segment_dict_pkl_path = 'sanfrancisco/label_is_steet/sf_idx_seg_dict.pkl'
         save_emb_to_file(last_layer_emb, idx_segment_dict_pkl_path, gat_emb_idx_pkl_path, gat_emb_file_path)
         print("Embeddings Saved to " + gat_emb_file_path + ' !')
 
