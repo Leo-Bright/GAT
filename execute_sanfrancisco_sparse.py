@@ -16,7 +16,7 @@ dataset = 'sanfrancisco'
 # training params
 batch_size = 1
 nb_epochs = 200
-patience = 5
+patience = 10
 lr = 0.005        # learning rate
 l2_coef = 0.0005  # weight decay
 hid_units = [4]   # numbers of hidden units per each attention head in each layer
@@ -200,9 +200,9 @@ with tf.Graph().as_default():
 
         # save gcn embeddings to file
         last_layer_emb = hidden_emb[0]
-        gat_emb_file_path = 'sanfrancisco/label_is_crossing/sf_gat_raw_feature_none_16d_target_is_crossing.embedding'
-        gat_emb_idx_pkl_path = 'sanfrancisco/label_is_crossing/sf_gat_raw_feature_none_16d_target_is_crossing.embedding.idx.pkl'
-        idx_segment_dict_pkl_path = 'sanfrancisco/label_is_crossing/sf_idx_node_dict.pkl'
+        gat_emb_file_path = 'sanfrancisco/label_is_avenue/sf_gcn_raw_feature_segment_16d_target_is_avenue.embedding'
+        gat_emb_idx_pkl_path = 'sanfrancisco/label_is_avenue/sf_gcn_raw_feature_segment_16d_target_is_avenue.embedding.idx.pkl'
+        idx_segment_dict_pkl_path = 'sanfrancisco/label_is_avenue/sf_idx_seg_dict.pkl'
         save_emb_to_file(last_layer_emb, idx_segment_dict_pkl_path, gat_emb_idx_pkl_path, gat_emb_file_path)
         print("Embeddings Saved to " + gat_emb_file_path + ' !')
 
